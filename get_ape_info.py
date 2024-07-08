@@ -21,32 +21,34 @@ api_url = "https://c2emjgrvmi7cabd41mpg.bdnodes.net?auth=Mwb3juVAfI1g2RmA1JCGdYk
 provider = HTTPProvider(api_url)
 web3 = Web3(provider)
 
-contract = web3.eth.contract(address = contract_address, abi = abi)
-def get_ape_info(apeID):
-	assert isinstance(apeID,int), f"{apeID} is not an int"
-	assert 1 <= apeID, f"{apeID} must be at least 1"
+contract = web3.eth.contract(address=contract_address, abi=abi)
 
-	data = {'owner': "", 'image': "", 'eyes': "" }
-	
 	#YOUR CODE HERE	
 
+def get_ape_info(apeID):
+    assert isinstance(apeID, int), f"{apeID} is not an int"
+    assert 1 <= apeID <= 10000, f"{apeID} must be between 1 and 10,000"
 
-	owner = contract.functions.ownerOf(apeID).call()
-	token_uri = contract.functions.tokenURI(apeID).call()
+    data = {'owner': "", 'image': "", 'eyes': ""}
 
-	ipfs_gateway = "https://gateway.pinata.cloud/ipfs/"
-	ipfs_hash = token_uri.split("ipfs://")[1]
-	metadata_url = ipfs_gateway + ipfs_hash
+    owner = contract.functions.ownerOf(apeID).call()
+    token_uri = contract.functions.tokenURI(apeID).call()
 
-	response = requests.get(metadata_url)
-  metadata = response.json()
+    ipfs_gateway = "https://gateway.pinata.cloud/ipfs/"
+    ipfs_hash = token_uri.split("ipfs://")[1]
+    metadata_url = ipfs_gateway + ipfs_hash
 
-	image_uri = metadata["image"]
-	eyes = next(attr["value"] for attr in metadata["attributes"] if attr["trait_type"] == "Eyes")
+    response = requests.get(metadata_url)
+    metadata = response.json()
 
-	assert isinstance(data,dict), f'get_ape_info{apeID} should return a dict' 
-	assert all( [a in data.keys() for a in ['owner','image','eyes']] ), f"return value should include the keys 'owner','image' and 'eyes'"
-	return data
+    image_uri = metadata["image"]
+    eyes = next(attr["value"] for attr in metadata["attributes"] if attr["trait_type"] == "Eyes")
 
+    data['owner'] = owner
+    data['image'] = image_uri
+    data['eyes'] = eyes
 
-
+    assert isinstance(data, dict), f'get_ape_info({apeID}) should return a dict'
+    assert all([a in data.keys() for a in ['owner', 'image', 'eyes']]), f"return value should include the keys 'owner','image' and 'eyes'"
+    
+    return data
